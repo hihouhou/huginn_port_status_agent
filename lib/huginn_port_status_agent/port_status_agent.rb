@@ -1,5 +1,6 @@
 module Agents
   class PortStatusAgent < Agent
+    include FormConfigurable
     can_dry_run!
     no_bulk_receive!
     default_schedule "never"
@@ -7,9 +8,11 @@ module Agents
     description do
       <<-MD
       The agent checks a port (TCP) for a specific host.
+
+      `expected_receive_period_in_days` is used to determine if the Agent is working. Set it to the maximum number of days
+      that you anticipate passing without this Agent receiving an incoming Event.
       MD
     end
-
 
     event_description <<-MD
       Events look like this:
@@ -25,10 +28,17 @@ module Agents
       {
         'ip' => '',
         'port' => '',
+        'expected_receive_period_in_days' => '2',
         'timeout_sec' => '1',
         'changes_only' => 'true'
       }
     end
+
+    form_configurable :expected_receive_period_in_days, type: :string
+    form_configurable :ip, type: :string
+    form_configurable :port, type: :string
+    form_configurable :timeout_sec, type: :string
+    form_configurable :changes_only, type: :boolean
 
     def validate_options
       unless options['ip'].present?
@@ -39,12 +49,16 @@ module Agents
         errors.add(:base, "port is a required field")
       end
 
+      if options.has_key?('changes_only') && boolify(options['changes_only']).nil?
+        errors.add(:base, "if provided, changes_only must be true or false")
+      end
+
       unless options['timeout_sec'].present?
         errors.add(:base, "timeout_sec is a required field")
       end
 
-      if options.has_key?('emit_events') && boolify(options['emit_events']).nil?
-        errors.add(:base, "if provided, emit_events must be true or false")
+      unless options['expected_receive_period_in_days'].present? && options['expected_receive_period_in_days'].to_i > 0
+        errors.add(:base, "Please provide 'expected_receive_period_in_days' to indicate how many days can pass before this Agent is considered to be not working")
       end
     end
 
