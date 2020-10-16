@@ -63,15 +63,7 @@ module Agents
     end
 
     def working?
-      memory['last_status'].to_i > 0
-
-      return false if recent_error_logs?
-      
-      if interpolated['expected_receive_period_in_days'].present?
-        return false unless last_receive_at && last_receive_at > interpolated['expected_receive_period_in_days'].to_i.days.ago
-      end
-
-      true
+      event_created_within?(options['expected_receive_period_in_days']) && !recent_error_logs?
     end
 
     def check
