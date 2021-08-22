@@ -17,11 +17,11 @@ module Agents
     event_description <<-MD
       Events look like this:
 
-      <pre><code>{
-        "ip": "127.0.0.1",
-        "port": "443",
-        "status": "closed"
-      }</code></pre>
+          {
+            "ip": "127.0.0.1",
+            "port": "443",
+            "status": "closed"
+          }
     MD
 
     def default_options
